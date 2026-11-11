@@ -305,7 +305,7 @@ button{cursor:pointer}
 .bookmode #vWidth{display:none!important}
 .samplenote{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:color-mix(in oklab,#2f6fd6 10%,var(--surface));border:1px solid color-mix(in oklab,#2f6fd6 35%,var(--line));border-radius:12px;padding:12px 14px;margin:0 0 18px;font-size:13.5px;word-break:keep-all}
 .tagline{margin:-8px 0 18px;font-size:15px;color:var(--muted);line-height:1.6;word-break:keep-all}
-.stills{margin:0 0 18px}
+.stills{margin:0 0 16px}
 .st-h{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}.st-h b{font-size:15px}.st-h span{color:var(--muted);font-size:13px}.st-h .st-ed{margin-left:auto;padding:4px 10px;font-size:13px}
 .st-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 @media (max-width:640px){.st-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -350,6 +350,7 @@ button{cursor:pointer}
 .mact{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
 .mbtn{min-width:40px;height:40px;border:1px solid var(--line);background:var(--surface);border-radius:8px;font-size:15px;color:var(--ink)}
 .mbtn.txt{font-size:13px;padding:0 10px}
+.mbtn.mdel-i{color:var(--muted)}.mbtn.mdel-i:hover{color:var(--bad);border-color:var(--bad)}.mbtn.mdel-i.arm{background:var(--bad);border-color:var(--bad);color:#fff!important}
 .mbtn:disabled{opacity:.3}
 @media (max-width:560px){.mitem{grid-template-columns:56px minmax(0,1fr);row-gap:10px}.mno{display:none}.mth{width:56px;height:40px}.mact{grid-column:1/-1;justify-content:stretch}.mact .mbtn{flex:1}.mcov{grid-template-columns:80px minmax(0,1fr)}}
 .subh{margin:22px 0 4px;font-size:13px;color:var(--muted);font-weight:700}
@@ -1123,8 +1124,9 @@ function renderManage(){
     const mk=(txt,lab,fn,cls)=>{const x=document.createElement('button');x.className='mbtn'+(cls?' '+cls:'');x.textContent=txt;x.setAttribute('aria-label',lab);x.onclick=fn;return x};
     const up=mk('↑','위로',()=>moveEp(i,-1));up.disabled=i===0;const dn=mk('↓','아래로',()=>moveEp(i,1));dn.disabled=i===L.length-1;
     act.append(up,dn,mk('수정','수정',()=>openEditor(e.id),'txt'));
+    const dl=mk('삭제',(e.title||K.newT(i+1))+' 삭제',()=>{},'txt mdel-i');armDelete(dl,()=>quickDelete(e.id),'한 번 더');
     if(kind==='episodes'&&e.pages[0])act.appendChild(mk('표지로','이 화 첫 장을 표지로',async()=>{W.cover=e.pages[0].url;const old=W.coverId;delete W.coverId;renderWork();if(await persist()){toast('표지로 정했어요');if(old)dropAssets([old])}},'txt'));
-    r.append(no,th,t,act);box.appendChild(r);
+    act.appendChild(dl);r.append(no,th,t,act);box.appendChild(r);
   });
   withSortable().then(S=>{if(!S)return;if(box._srt)box._srt.destroy();box._srt=S.create(box,{animation:160,handle:'.mth',onEnd:async ev=>{if(ev.oldIndex===ev.newIndex)return;const [m]=L.splice(ev.oldIndex,1);L.splice(ev.newIndex,0,m);renderWork();await persist()}})});
 }
@@ -1169,6 +1171,9 @@ function renderStillsMng(){if(!editing||!W||mtab!=='stills')return;const L=W.sti
     t.append(im,cap,del);g.appendChild(t)});
   box.appendChild(g);
   withSortable().then(S=>{if(!S)return;S.create(g,{animation:160,filter:'input,button',preventOnFilter:false,onEnd:async ev=>{if(ev.oldIndex===ev.newIndex)return;const [m]=L.splice(ev.oldIndex,1);L.splice(ev.newIndex,0,m);renderWork();await persist()}})})}
+async function quickDelete(id){const snap=JSON.stringify(D);const wid=W.id,k0=kind;const L=W[kind];const i=L.findIndex(x=>x.id===id);if(i<0)return;const nm=L[i].title||'';const gone=L[i].pages.map(p=>p.id);L.splice(i,1);
+  if(draft&&draft.id===id){$('#editor').hidden=true;draft=null}renderWork();renderManage();
+  if(await persist())offerUndo('‘'+nm+'’을(를) 삭제했어요',async()=>{D=migrate(JSON.parse(snap));W=D.works.find(w=>w.id===wid)||W;kind=k0;if(await persist()){toast('되살렸어요');renderWork();renderManage()}},()=>dropAssets(gone))}
 function renderCatChips(){const box=$('#catChips');box.innerHTML='';const cur=$('#catIn').value.trim();
   [...new Set(['웹툰','출판 만화','일러스트','기획','기타',...D.works.map(w=>w.category).filter(Boolean)])].forEach(c=>{const b=document.createElement('button');b.type='button';b.className='tchip';b.textContent=c;b.setAttribute('aria-pressed',c===cur);b.onclick=()=>{$('#catIn').value=c===cur?'':c;renderCatChips()};box.appendChild(b)})}
 $('#catIn').addEventListener('input',renderCatChips);
