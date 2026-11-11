@@ -1359,7 +1359,7 @@ async function exportZip(){
     src=src.replace(/<script id="tpl-flag">[^<]*<\/script>/,'');const k=src.search(/<body[^>]*>/i);const end=src.indexOf('>',k)+1;
     let og=null;try{og=await makeOgImage()}catch(e){}if(og)img.file('og.jpg',og);
     zip.file('index.html',injectHead(src.slice(0,end)+inj+src.slice(end),metaTags(og?'images/og.jpg':'')));
-    zip.file('읽어 주세요.txt','이 폴더를 통째로 웹 호스팅(Netlify Drop, GitHub Pages 등)에 올리면 사이트가 돼요.\nindex.html을 더블클릭해서 바로 볼 수도 있어요.\nimages 폴더와 index.html은 항상 같은 위치에 두어야 해요.\n수정은 Claude의 원래 페이지에서 하고, 바뀌면 이 파일을 다시 받아 주세요.\n');
+    zip.file('읽어 주세요.txt','압축을 풀고, 안의 파일과 폴더(index.html, images 등)를 GitHub 저장소의 Add file → Upload files에 끌어다 놓으면 사이트가 돼요.\nindex.html을 더블클릭해서 바로 볼 수도 있어요.\nimages 폴더와 index.html은 항상 같은 위치에 두어야 해요.\n수정은 포트폴리오 틀 파일에서 하고, 바뀌면 zip을 다시 받아 올려 주세요.\n');
     btn.textContent='압축 중…';
     const blob=await zip.generateAsync({type:'blob',compression:'STORE'});
     await downloadsApi.save({filename:(D.title||'portfolio').replace(/[\\/:*?"<>|]/g,'')+'_site.zip',data:blob});toast('사이트 파일을 만들었어요');
