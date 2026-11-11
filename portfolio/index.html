@@ -714,7 +714,7 @@ function renderLibMng(){
     const card=document.createElement('section');card.className='wform';
     const sec=(h,sm)=>{const d=document.createElement('div');d.className='wf-sec';const t=document.createElement('h3');t.textContent=h;if(sm){const x=document.createElement('small');x.textContent=sm;t.appendChild(x)}d.appendChild(t);card.appendChild(d);return d};
     const fld=(box,id,lab,val,ph,ta)=>{const l=document.createElement('label');l.className='wf';const sp=document.createElement('span');sp.textContent=lab;const i=document.createElement(ta?'textarea':'input');i.id=id;i.value=val||'';i.placeholder=ph;if(ta)i.rows=ta;l.append(sp,i);box.appendChild(l);return l};
-    const s0=sec('사이트');fld(s0,'pfSite','사이트 이름',D.title,'PORTFOLIO');fld(s0,'pfUrl','사이트 주소 (링크 미리보기용, 선택)',D.siteUrl,'https://내사이트.netlify.app');fld(s0,'pfFoot','맨 아래 저작권 문구 (비우면 기본 문구)',D.footer,FOOT_DEF,3);
+    const s0=sec('사이트');fld(s0,'pfSite','사이트 이름',D.title,'PORTFOLIO');fld(s0,'pfUrl','사이트 주소 (링크 미리보기용, 선택)',D.siteUrl,'https://아이디.github.io/사이트이름');fld(s0,'pfFoot','맨 아래 저작권 문구 (비우면 기본 문구)',D.footer,FOOT_DEF,3);
     const s1=sec('작가 소개','비워 둔 칸은 화면에 안 나와요');
     const avw=document.createElement('div');avw.className='avedit';const avp=document.createElement('div');avp.className='av';
     const paintAv=()=>{const A=D.profile&&D.profile.avatar;avp.style.backgroundImage=A&&A.url?'url("'+A.url+'")':'';avp.classList.toggle('img',!!(A&&A.url));avp.textContent=A&&A.url?'':((P.name||D.title||'·').trim().slice(0,1));avDel.hidden=!(A&&A.url);avUp.textContent=A&&A.url?'사진 바꾸기':'프로필 사진 올리기'};
