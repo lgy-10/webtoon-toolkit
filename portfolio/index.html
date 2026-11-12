@@ -1430,11 +1430,29 @@ function metaTags(imgPath){const t=D.title||'PORTFOLIO';const nm=((D.profile&&D.
   const base=(D.siteUrl||'').trim();if(base&&/^https?:\/\//.test(base)){m+='<meta property="og:url" content="'+esc(base+'/')+'">';if(imgPath)m+='<meta property="og:image" content="'+esc(base+'/'+imgPath)+'"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">'}
   return m}
 function injectHead(src,tags){const t=D.title||'PORTFOLIO';src=src.replace(/<title>[^<]*<\/title>/i,'');const i=src.search(/<\/head>/i);const add='<title>'+esc(t)+'</title>'+tags;return i>=0?src.slice(0,i)+add+src.slice(i):add+src}
-async function makeOgImage(){const w=D.works.find(x=>x.pinned)||orderedWorks()[0];const c=w&&coverOf(w);
-  const cv=document.createElement('canvas');cv.width=1200;cv.height=630;const x=cv.getContext('2d');const g=x.createRadialGradient(600,280,80,600,315,760);g.addColorStop(0,'#ffffff');g.addColorStop(1,'#e9e5e8');x.fillStyle=g;x.fillRect(0,0,1200,630);
-  if(c){try{const im=await new Promise((ok,no)=>{const i=new Image();i.crossOrigin='anonymous';i.onload=()=>ok(i);i.onerror=no;i.src=c});const h=560,wd=im.naturalWidth*h/im.naturalHeight;x.shadowColor='rgba(0,0,0,.18)';x.shadowBlur=30;x.shadowOffsetY=10;x.drawImage(im,(1200-wd)/2,35,wd,h)}catch(e){}}
-  else{x.fillStyle='#2a2b30';x.font='900 84px "Noto Sans KR",sans-serif';x.textAlign='center';x.fillText(D.title||'PORTFOLIO',600,340)}
-  return new Promise(r=>cv.toBlob(r,'image/jpeg',0.88))}
+async function makeOgImage(){const F='"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
+  try{await Promise.all(['900 96px','700 30px','500 26px'].map(f=>document.fonts.load(f+' "Noto Sans KR"','가A')))}catch(e){}
+  const cv=document.createElement('canvas');cv.width=1200;cv.height=630;const x=cv.getContext('2d');const ls=v=>{try{x.letterSpacing=v}catch(e){}};
+  const wrap=(t,maxW,maxL)=>{const words=String(t||'').split(/(\s+)/);const out=[];let cur='';const push=()=>{out.push(cur.trim());cur=''};
+    for(const wd of words){if(!wd)continue;if(x.measureText(cur+wd).width<=maxW){cur+=wd;continue}if(cur.trim())push();if(/^\s+$/.test(wd))continue;let piece='';for(const ch of wd){if(x.measureText(piece+ch).width>maxW&&piece){out.push(piece);piece=ch}else piece+=ch}cur=piece}
+    if(cur.trim())push();if(out.length>maxL){const k=out.slice(0,maxL);let l=k[maxL-1];while(l&&x.measureText(l+'…').width>maxW)l=l.slice(0,-1);k[maxL-1]=l+'…';return k}return out};
+  x.fillStyle='#f3f3f5';x.fillRect(0,0,1200,630);
+  const P=D.profile||{};const fields=String(P.fields||'').split(/[,，·]/).map(s=>s.trim()).filter(Boolean);const nm=/[A-Za-z가-힣]/.test(P.name||'')?P.name.trim():'';
+  x.textBaseline='alphabetic';x.textAlign='left';
+  ls('6px');x.fillStyle='#8a8a92';x.font='700 18px '+F;x.fillText('WEBTOON PORTFOLIO',72,206);
+  ls('4px');x.fillStyle='#151517';let ts=104;const title=D.title||'PORTFOLIO';do{x.font='900 '+ts+'px '+F;ts-=4}while(x.measureText(title).width>560&&ts>40);x.fillText(title,68,318);
+  ls('0px');let y=392;
+  if(nm){x.font='700 32px '+F;x.fillStyle='#151517';x.fillText(nm,72,y);y+=48}
+  if(fields.length){x.font='500 25px '+F;let cx=72;for(const f of fields){const w=x.measureText(f).width+34;if(cx+w>640)break;x.fillStyle='#2a2b30';x.beginPath();x.roundRect?x.roundRect(cx,y-30,w,44,22):x.rect(cx,y-30,w,44);x.fill();x.fillStyle='#f4f4f6';x.fillText(f,cx+17,y);cx+=w+10}}
+  const host=String(D.siteUrl||'').replace(/^https?:\/\//,'').replace(/\/$/,'');if(host){x.font='500 19px '+F;x.fillStyle='#8a8a92';x.fillText(host,72,566)}
+  x.fillStyle='#2a2b30';x.fillRect(720,0,480,630);
+  const ws=orderedWorks().slice(0,3);
+  ls('6px');x.font='700 16px '+F;x.fillStyle='rgba(244,244,246,.55)';x.fillText('WORKS',776,130);ls('0px');
+  let wy=180;ws.forEach((w,i)=>{if(i){x.fillStyle='rgba(255,255,255,.14)';x.fillRect(776,wy-34,370,1)}
+    x.font='500 17px '+F;x.fillStyle='rgba(244,244,246,.6)';x.fillText([w.category,w.genre].filter(Boolean).join(' · ').slice(0,30),776,wy);
+    x.font='900 30px '+F;x.fillStyle='#f4f4f6';const L=wrap(w.title||'작품',370,2);L.forEach((l,k)=>x.fillText(l,776,wy+42+k*40));wy+=42+L.length*40+52});
+  const more=D.works.length-ws.length;x.font='500 17px '+F;x.fillStyle='rgba(244,244,246,.55)';x.fillText('작품 '+D.works.length+'개'+(more>0?' · 외 '+more+'개':''),776,566);
+  return new Promise(r=>cv.toBlob(r,'image/jpeg',0.9))}
 let zipBusy=false;
 async function exportZip(){
   if(zipBusy)return;if(!downloadsApi){toast('이 화면에서는 파일로 내려받을 수 없어요.');return}
