@@ -537,7 +537,7 @@ function shrink(file){return new Promise((ok,no)=>{const u=URL.createObjectURL(f
 let pvTool=null,pvMode='pc';
 function setPvMode(m){pvMode=m;$('#pvStage').classList.toggle('phone',m==='phone');document.querySelectorAll('#pvSeg button').forEach(b=>b.classList.toggle('on',b.dataset.m===m))}
 function openPreview(t){pvTool=t;$('#pvTitle').textContent=(t.name||'')+' 미리보기';
-  const f=document.createElement('iframe');f.setAttribute('sandbox','allow-scripts allow-forms');f.title=(t.name||'도구')+' 미리보기';f.src=t.preview;
+  const f=document.createElement('iframe');f.setAttribute('sandbox','allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads');f.title=(t.name||'도구')+' 미리보기';f.src=t.preview;
   const box=$('#pvFrame');box.textContent='';box.appendChild(f);
   setPvMode(innerWidth<=640?'pc':pvMode);$('#pvDl').hidden=!t.file;
   $('#pvov').hidden=false;document.body.style.overflow='hidden';$('#pvX').focus()}
