@@ -45,7 +45,7 @@ header.top h1{margin:0;font-size:20px;font-weight:900;letter-spacing:-.02em;marg
 .card.sumcard{background:var(--phead);color:var(--phead-ink);border-color:var(--phead)}
 .sumcard .now{color:rgba(244,244,246,.7)}.sumcard .now b{color:var(--phead-ink)}
 .sumcard .legend{color:rgba(244,244,246,.6)}.sumcard .legend span::before{background:var(--phead-ink)}
-.sumcard .prog{background:rgba(255,255,255,.1);border-color:transparent}.sumcard .prog i{background:var(--brand,var(--phead-ink))}
+.sumcard .prog{background:rgba(255,255,255,.1);border-color:transparent}.sumcard .prog i{background:var(--hi,var(--phead-ink))}
 .sumcard .tlax{color:rgba(244,244,246,.55)}
 .ptab .dd,.st .when,.pc output,.legend,.tlax,.day .dn,.todo-i .dd2,.dp-i em,.ag .d,.mini-top b,.calhead h2,.fld input[type=date],.st input[type=number]{font-family:var(--fn)}
 .head{display:flex;flex-direction:column;gap:12px}
@@ -84,7 +84,7 @@ header.top h1{margin:0;font-size:20px;font-weight:900;letter-spacing:-.02em;marg
 .seg{position:relative;min-width:3px;background:rgba(255,255,255,.08);overflow:hidden;display:flex;align-items:center;padding:0 9px;color:rgba(244,244,246,.78);font-size:12px;font-weight:600;white-space:nowrap;border-radius:3px}
 .seg:nth-child(even){background:rgba(255,255,255,.12)}
 .seg.done{background:rgba(255,255,255,.88)!important;color:var(--phead)}
-.seg .fill{position:absolute;left:0;bottom:0;top:auto;height:3px;background:var(--brand,var(--phead-ink))}
+.seg .fill{position:absolute;left:0;bottom:0;top:auto;height:3px;background:var(--hi,var(--phead-ink))}
 .seg.done .fill{display:none}
 .seg span{position:relative;overflow:hidden;text-overflow:ellipsis}
 .tlnow{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--bad);border-radius:2px}
@@ -349,16 +349,18 @@ function render(){save();applyPal();S.view=S.view||'cal';const v=WMODE?'mini':S.
 document.querySelectorAll('.viewseg button').forEach(b=>b.onclick=()=>{S.view=b.dataset.v;render()});
 // ---------- 달력 ----------
 const PALS={
-  basic:{name:'기본',brand:'',c:['#3d4f6b','#9a5a52','#4f7563','#8a7350','#6e5f86','#4f7480']},
-  pastel:{name:'파스텔',brand:'#7b7fae',c:['#9fb2d6','#e3a9b1','#a7cdb6','#e6cf9c','#bfb1da','#a3cfd1']},
-  vivid:{name:'비비드',brand:'#d64550',c:['#d64550','#2f6fd6','#e08a1e','#1f9a70','#7446c9','#1d9aa3']},
-  forest:{name:'숲',brand:'#2d6a4f',c:['#2d6a4f','#c08a3e','#3d8fa3','#b5838d','#74a557','#6d597a']},
-  sunset:{name:'노을',brand:'#e76f51',c:['#e76f51','#2a9d8f','#e9c46a','#264653','#f4a261','#9d4edd']}};
+  basic:{name:'기본',brand:'',hi:'',c:['#3d4f6b','#9a5a52','#4f7563','#8a7350','#6e5f86','#4f7480']},
+  dusk:{name:'노을빛',brand:'#3E5A78',hi:'#EEB59B',c:['#3E5A78','#E57A7F','#6A5672','#E9A285','#B26D7E','#D98A5F']},
+  sea:{name:'바다',brand:'#1F3550',hi:'#82A9C1',c:['#1F3550','#82A9C1','#4F9A8E','#5D83A3','#2C4A6C','#8FCAB6']},
+  vintage:{name:'빈티지',brand:'#5C7553',hi:'#ECBE74',c:['#5C7553','#D8856F','#779892','#E3B163','#B9817C','#8A7A5C']},
+  pop:{name:'팝',brand:'#DB3B7B',hi:'#F8E86B',c:['#DB3B7B','#3FB5B4','#EF6466','#D9B32B','#3D7BB8','#F08A4B']},
+  pastel:{name:'파스텔',brand:'#8579C9',hi:'#C9C2F7',c:['#9B8FE0','#F2A7A3','#8FCFA6','#E3C772','#A7B9F2','#E3A3D3']}};
 const lum=h=>{const n=parseInt(h.slice(1),16);const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};return .2126*f(n>>16)+.7152*f((n>>8)&255)+.0722*f(n&255)};
 const textOn=h=>lum(h)>.42?'#17181b':'#ffffff';
-function pal(){return PALS[S.palette]||PALS.basic}
+const OLDPAL={vivid:'pop',forest:'vintage',sunset:'dusk'};
+function pal(){if(OLDPAL[S.palette])S.palette=OLDPAL[S.palette];return PALS[S.palette]||PALS.basic}
 function applyPal(){const P=pal(),r=document.documentElement.style;if(P.brand){r.setProperty('--brand',P.brand);r.setProperty('--brand-ink',textOn(P.brand));r.setProperty('--tint',P.brand+'1f')}else{r.removeProperty('--brand');r.removeProperty('--brand-ink');r.removeProperty('--tint')}
-  P.c.forEach((c,i)=>r.setProperty('--c'+(i+1),c));const tm=document.querySelector('meta[name=theme-color]');if(tm)tm.content=P.brand||'#2a2b30'}
+  if(P.hi)r.setProperty('--hi',P.hi);else r.removeProperty('--hi');P.c.forEach((c,i)=>r.setProperty('--c'+(i+1),c));const tm=document.querySelector('meta[name=theme-color]');if(tm)tm.content=P.brand||'#2a2b30'}
 const colorOf=p=>{const i=S.projects.indexOf(p);return pal().c[(p.color!=null?p.color:i)%6]};
 let calY=null,calM=null,selDay=today();const hidden=new Set();
 function allEvents(){const ev=[];S.projects.forEach(p=>{if(hidden.has(p.id))return;const P=plan(p);
