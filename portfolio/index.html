@@ -415,6 +415,7 @@ button{cursor:pointer}
 .prog{position:fixed;top:0;left:0;height:3px;background:var(--accent);z-index:13;width:0}
 .strip{margin:0 auto;display:flex;flex-direction:column;background:#ffffff;max-width:100%}
 .strip img{display:block;width:100%;height:auto}
+.strip img.jn{margin-top:-1px}
 .vend{max-width:100%;margin:0 auto;padding:40px 16px calc(110px + env(safe-area-inset-bottom,0px));text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
 .vend b{font-size:16px}
 .vend .next{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:12px 26px;font-weight:700;font-size:15px}
@@ -1233,20 +1234,24 @@ armDelete($('#delEp'),async()=>{const snap=JSON.stringify(D);const wid=W.id,k0=k
 
 // ---------- 업로드 ----------
 let MAXH=1600;const TW=900;
-function canvasToBlob(c){return new Promise(r=>c.toBlob(r,'image/jpeg',0.85))}
+function canvasToBlob(c){return new Promise(r=>c.toBlob(r,'image/jpeg',0.92))}
 async function sliceCanvas(w,h,draw){
-  const out=[];let y=0;
-  while(y<h){let sh=Math.min(MAXH,h-y);if(h-(y+sh)<300)sh=h-y;
-    const c=document.createElement('canvas');c.width=w;c.height=sh;const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,w,sh);draw(ctx,y,sh);
-    out.push({blob:await canvasToBlob(c),w,h:sh});y+=sh}
+  /* 캔버스가 버틸 수 있는 높이까지는 한 장 그대로. 넘치면 똑같은 크기로 나누고, 이어지는 조각은 위쪽 2줄을 겹쳐 실금이 안 보이게 해요 */
+  const LIM=Math.max(2000,Math.floor(16000000/w));const n=Math.ceil(h/LIM);const out=[];const OV=2;
+  for(let k=0;k<n;k++){const y0=Math.round(h*k/n),y1=Math.round(h*(k+1)/n);const ys=k?Math.max(0,y0-OV):y0;const sh=y1-ys;
+    const c=document.createElement('canvas');c.width=w;c.height=sh;const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,w,sh);draw(ctx,ys,sh);
+    out.push({blob:await canvasToBlob(c),w,h:sh,join:k>0});c.width=c.height=0}
   return out;
 }
 async function imageToSlices(file){
   const url=URL.createObjectURL(file);
-  const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=url});
-  const scale=img.naturalWidth>1080?1080/img.naturalWidth:1;const w=Math.round(img.naturalWidth*scale),h=Math.round(img.naturalHeight*scale);
-  const res=await sliceCanvas(w,h,(ctx,y,sh)=>ctx.drawImage(img,0,y/scale,img.naturalWidth,sh/scale,0,0,w,sh));
-  URL.revokeObjectURL(url);return res;
+  try{const img=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=url});
+    const nw=img.naturalWidth,nh=img.naturalHeight;
+    /* 웬만한 원고 파일은 자르지도, 다시 압축하지도 않고 원본 그대로 올려요 */
+    if(/^image\/(jpeg|png|webp|gif)$/.test(file.type)&&nw<=1600&&file.size<=12*1024*1024)return [{blob:file,w:nw,h:nh,join:false}];
+    const scale=nw>1080?1080/nw:1;const w=Math.round(nw*scale),h=Math.round(nh*scale);
+    return await sliceCanvas(w,h,(ctx,y,sh)=>ctx.drawImage(img,0,y/scale,nw,sh/scale,0,0,w,sh));
+  }finally{URL.revokeObjectURL(url)}
 }
 function loadScript(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
 async function pdfToSlices(file,onPage){
@@ -1268,7 +1273,7 @@ async function pdfToSlices(file,onPage){
   return all;
 }
 function prog(p,t){if(draft&&draft.quick){toast(t);return}$('#progWrap').hidden=false;$('#progTxt').classList.toggle('done',p>=1);$('#progBar').style.width=Math.round(p*100)+'%';$('#progTxt').textContent=t}
-async function handleFiles(list){MAXH=(W&&W.format==='comic'&&kind==='episodes')?100000:1600;
+async function handleFiles(list){
   if(!draft)openEditor(null);
   const quick=!!draft.quick;
   if(!assetsApi){toast('이 화면에서는 이미지를 올릴 수 없어요.');return}
@@ -1282,7 +1287,7 @@ async function handleFiles(list){MAXH=(W&&W.format==='comic'&&kind==='episodes')
   }catch(e){$('#progWrap').hidden=true;toast('파일을 읽지 못했어요. 이미지나 PDF인지 확인해 주세요.');return}
   for(let k=0;k<slices.length;k++){
     prog(.3+.7*(k/slices.length),'올리는 중 '+(k+1)+'/'+slices.length);
-    try{const r=await assetsApi.upload(slices[k].blob);draft.pages.push({url:r.url,id:r.id,w:slices[k].w,h:slices[k].h});if(!quick)renderThumbs()}
+    try{const r=await assetsApi.upload(slices[k].blob);draft.pages.push({url:r.url,id:r.id,w:slices[k].w,h:slices[k].h,join:!!slices[k].join});if(!quick)renderThumbs()}
     catch(e){toast('올리지 못한 이미지가 있어요 ('+(k+1)+'번째).')}
   }
   if(quick)return;
@@ -1345,7 +1350,7 @@ function openEp(id){
   show('view');
   $('#vTitle').textContent=(W.title?W.title+' · ':'')+(e.title||((cur+1)+'화'));
   const st=$('#strip');st.innerHTML='';
-  e.pages.forEach((p,k)=>{const img=document.createElement('img');img.src=p.url;img.width=p.w;img.height=p.h;img.alt=(e.title||'')+' '+(k+1)+'번째 이미지';if(k>2)img.loading='lazy';img.decoding='async';img.onload=()=>img.classList.add('ld');img.onerror=()=>img.classList.add('ld');if(img.complete)img.classList.add('ld');st.appendChild(img)});
+  e.pages.forEach((p,k)=>{const img=document.createElement('img');img.src=p.url;img.width=p.w;img.height=p.h;const pv=e.pages[k-1];if(p.join||(pv&&!('join' in pv)&&!('join' in p)&&pv.h===1600&&pv.w===p.w))img.classList.add('jn');img.alt=(e.title||'')+' '+(k+1)+'번째 이미지';if(k>2)img.loading='lazy';img.decoding='async';img.onload=()=>img.classList.add('ld');img.onerror=()=>img.classList.add('ld');if(img.complete)img.classList.add('ld');st.appendChild(img)});
   const nx=L[cur+1];
   const end=$('#vend');end.innerHTML='';
   const b=document.createElement('b');b.textContent=(e.title||'')+' 끝';end.appendChild(b);
