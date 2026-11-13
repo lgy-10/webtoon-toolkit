@@ -208,7 +208,11 @@ textarea.memo{width:100%;min-height:90px;border:1px solid var(--line);background
 .getpop{position:absolute;right:0;top:calc(100% + 6px);z-index:30;width:270px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.14);padding:6px;display:flex;flex-direction:column}
 .getopt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;border:0;background:transparent;border-radius:9px;padding:9px 10px;text-align:left;font-size:14px;font-weight:700;width:100%}
 .getopt small{font-size:12.5px;font-weight:500;color:var(--muted);line-height:1.5}
-.getopt:hover{background:var(--bg)}
+.getopt:hover,.getlink:hover{background:var(--bg)}
+.getsub{font-size:12px;font-weight:800;color:var(--muted);padding:10px 10px 0;border-top:1px solid var(--line);margin-top:4px}
+.getsubd{display:block;font-size:12px;color:var(--muted);padding:2px 10px 4px;line-height:1.5}
+.getlink{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;font-size:14px;font-weight:700;color:var(--ink);text-decoration:none}
+.getlink em{font-style:normal;font-size:11px;font-weight:700;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:1px 7px}
 .getnote{font-size:12.5px;color:var(--muted);line-height:1.55;padding:8px 10px;border-top:1px solid var(--line);margin-top:4px}
 .getwrap{order:9}
 @media (max-width:560px){.getbtn .lg{display:none}.getbtn .sm{display:inline}.getwrap{order:0}header.top h1{flex:1 1 calc(100% - 110px)!important}.getpop{width:min(270px,calc(100vw - 32px))}}
@@ -230,6 +234,16 @@ textarea.memo{width:100%;min-height:90px;border:1px solid var(--line);background
 body.wmode header.top,body.wmode .viewseg,body.wmode #sample{display:none}
 body.wmode .wrap{padding-top:10px}
 .wexit{display:none}
+.dbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:2px;height:38px;padding:0 6px 0 14px;background:var(--bg);-webkit-app-region:drag;user-select:none}
+.dbar-t{flex:1;font-size:12.5px;font-weight:700;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dbtn{-webkit-app-region:no-drag;width:30px;height:28px;border:0;border-radius:7px;background:transparent;color:var(--muted);display:grid;place-items:center}
+.dbtn:hover{background:var(--line);color:var(--ink)}
+.dbtn[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+body.desk.wmode .wrap{padding-top:0}
+body.desk .getwrap,body.desk #installBar{display:none!important}
+body.desk.wmode{overflow-y:auto}
+body.desk.wmode::-webkit-scrollbar{width:8px}body.desk.wmode::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;border:2px solid var(--bg)}body.desk.wmode::-webkit-scrollbar-track{background:transparent}
+
 body.wmode .wexit{display:inline-flex;margin:0 auto 10px}
 .savest{display:block;font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0;margin-top:2px;min-height:1.2em}
 .savest.off{color:var(--warn)}
@@ -517,7 +531,7 @@ function exportIcs(p){const P=plan(p);const esc=t=>String(t).replace(/[\\,;]/g,m
   P.rows.forEach(r=>{if(!/여유/.test(r.s.name))ev(r.s.id,'['+p.name+'] '+r.s.name+' 마감',r.end)});ev(p.id,'['+p.name+'] 최종 마감',p.due);
   lines.push('END:VCALENDAR');dl((p.name||'일정').replace(/[\\/:*?"<>|]/g,'')+'.ics',new Blob([lines.join('\r\n')],{type:'text/calendar'}));toast('캘린더 파일을 받았어요. 구글 캘린더 등에서 가져오기로 넣을 수 있어요.','good')}
 // ---------- 위젯 ----------
-const WMODE=/[?&#]widget\b/.test(location.search+location.hash);if(WMODE)document.body.classList.add('wmode');
+const DESK=window.desktop||null;const WMODE=/[?&#]widget\b/.test(location.search+location.hash);if(WMODE)document.body.classList.add('wmode');
 function renderMini(){const box=$('#mini');box.textContent='';const t=today();const td=pd(t);
   const c=el('section','card');const top=el('div','mini-top');top.append(el('b','',(td.getMonth()+1)+'월 '+td.getDate()+'일 '+W[td.getDay()]+'요일'));c.appendChild(top);
   c.appendChild(el('div','sh')).appendChild(el('h2','','오늘 할 일'));
@@ -530,8 +544,21 @@ function renderMini(){const box=$('#mini');box.textContent='';const t=today();co
   const evs=allEvents().filter(e=>e.date>=t&&e.date<=end&&!e.done).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
   evs.forEach(e=>{const r=el('button','ag');r.type='button';const k=diff(t,e.date);const ic=el('i');ic.style.background=colorOf(e.p);const tx=el('div');tx.append(el('b','',e.label),el('small','',e.p.name));r.append(el('span','d'+(k<=2?' urgent':''),k===0?'오늘':md(e.date)),ic,tx);r.onclick=()=>{if(WMODE)return;openProject(e.p)};ag2.appendChild(r)});
   if(!evs.length)ag2.appendChild(el('p','dp-empty','2주 안에 마감이 없어요.'));c2.appendChild(ag2);box.appendChild(c2);
-  if(WMODE){const x=el('a','btn sm ghost wexit','전체 화면으로 열기');x.href=location.pathname;x.target='_blank';box.appendChild(x)}
-  else{const tip=el('p','dp-empty');tip.style.cssText='text-align:center;font-size:12.5px';tip.textContent='앱으로 설치한 뒤 이 화면을 띄워 두면 작은 창으로 오늘 할 일을 볼 수 있어요.';box.appendChild(tip)}}
+  if(WMODE){if(!DESK){const x=el('a','btn sm ghost wexit','전체 화면으로 열기');x.href=location.pathname;x.target='_blank';box.appendChild(x)}}
+  else{const tip=el('p','dp-empty');tip.style.cssText='text-align:center;font-size:12.5px';tip.textContent=DESK?'위에 있는 위젯 띄우기를 누르면 바탕화면에 작은 창으로 띄울 수 있어요.':'앱으로 설치한 뒤 이 화면을 띄워 두면 작은 창으로 오늘 할 일을 볼 수 있어요.';box.appendChild(tip)}}
+// ---------- PC 위젯 프로그램 ----------
+if(DESK){document.body.classList.add('desk');
+  if(WMODE){const bar=el('div','dbar');const t=el('span','dbar-t','마감 역산 일정표');
+    const pin=el('button','dbtn');pin.type='button';pin.title='항상 위에 고정';pin.innerHTML='<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M9.6 1.5l4.9 4.9-1.3.4-2.3 2.3.3 3.1-1.2 1.2-2.6-2.6-3.6 3.6-.9-.9 3.6-3.6-2.6-2.6 1.2-1.2 3.1.3 2.3-2.3z" fill="currentColor"/></svg>';
+    const setPin=v=>{pin.setAttribute('aria-pressed',v?'true':'false');pin.title=v?'고정 풀기':'항상 위에 고정'};
+    pin.onclick=async()=>{setPin(await DESK.togglePin())};DESK.getPin().then(setPin);DESK.onPin&&DESK.onPin(setPin);
+    const full=el('button','dbtn');full.type='button';full.title='전체 창 열기';full.innerHTML='<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M9 2h5v5h-1.5V4.6L9 8.1 7.9 7l3.5-3.5H9zM2 9h1.5v2.4L7 7.9 8.1 9l-3.5 3.5H7V14H2z" fill="currentColor"/></svg>';full.onclick=()=>DESK.openMain();
+    const x=el('button','dbtn');x.type='button';x.title='위젯 숨기기';x.innerHTML='<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4.1 3L8 6.9 11.9 3 13 4.1 9.1 8l3.9 3.9-1.1 1.1L8 9.1 4.1 13 3 11.9 6.9 8 3 4.1z" fill="currentColor"/></svg>';x.onclick=()=>DESK.hideWidget();
+    bar.append(t,pin,full,x);document.body.prepend(bar);
+    addEventListener('storage',e=>{if(e.key!==KEY||!e.newValue)return;try{const d=JSON.parse(e.newValue);if(d&&Array.isArray(d.projects)){S=d;renderMini();applyPal()}}catch(err){}});
+    let lastDay=today();setInterval(()=>{if(today()!==lastDay){lastDay=today();renderMini()}},60000);
+  }else{const b=el('button','btn','위젯 띄우기');b.type='button';b.id='deskW';b.onclick=()=>DESK.showWidget();$('#palBtn').parentNode.after(b)}}
+
 // ---------- 색상 ----------
 $('#palBtn').onclick=e=>{e.stopPropagation();const w=$('#palBtn').parentNode;const old=w.querySelector('.palpop');if(old){old.remove();$('#palBtn').setAttribute('aria-expanded','false');return}
   const pop=el('div','palpop');pop.setAttribute('role','menu');Object.entries(PALS).forEach(([k,v])=>{const o=el('button','palopt');o.type='button';o.setAttribute('aria-pressed',(S.palette||'basic')===k);o.appendChild(el('span','',v.name));const sw=el('span','sw');v.c.slice(0,5).forEach(c=>{const i=el('i');i.style.background=c;sw.appendChild(i)});o.appendChild(sw);
@@ -558,6 +585,9 @@ $('#getBtn').onclick=e=>{e.stopPropagation();if(document.querySelector('.getpop'
   const add=(t,d,f)=>{const b=document.createElement('button');b.type='button';b.className='getopt';b.setAttribute('role','menuitem');b.innerHTML='<span>'+t+'</span><small>'+d+'</small>';b.onclick=ev=>{ev.stopPropagation();f()};pop.appendChild(b)};
   if(standalone){}else if(deferred)add('앱으로 설치','바탕화면이나 홈 화면에 아이콘이 생겨요. 인터넷 없어도 열려요.',getInstall);
   add('파일로 받기 (.html)','PC에 저장해 두고 더블클릭해서 열어요. 일정은 그 파일을 연 브라우저에 저장돼요.',getFile);
+  const wl=el('div','getsub','PC 위젯 프로그램');pop.appendChild(wl);const wd=el('small','getsubd','바탕화면에 작은 창으로 띄워 두고, 컴퓨터를 켜면 자동으로 떠요.');pop.appendChild(wd);
+  const isMac=/Mac/i.test(navigator.platform||navigator.userAgent);
+  [['윈도우','DeadlinePlanner-Windows.zip',!isMac],['맥 (M1~M4 칩)','DeadlinePlanner-Mac-AppleSilicon.zip',isMac],['맥 (인텔)','DeadlinePlanner-Mac-Intel.zip',false]].forEach(([n,f,mine])=>{const a=el('a','getlink');a.href='https://github.com/lgy-10/webtoon-toolkit/releases/latest/download/'+f;a.target='_blank';a.rel='noopener';a.setAttribute('role','menuitem');a.append(document.createTextNode('↓ '+n));if(mine)a.append(el('em','','내 컴퓨터'));a.onclick=()=>closeGet();pop.appendChild(a)});
   const n=document.createElement('div');n.className='getnote';
   n.textContent=standalone?'지금 앱으로 열려 있어요.':deferred?'설치한 앱과 받은 파일은 저장 공간이 따로라서, 옮길 땐 백업 받기 → 불러오기를 써 주세요.':ios?'아이폰은 Safari 아래 공유 버튼 → 홈 화면에 추가를 누르면 앱처럼 쓸 수 있어요.':'설치 버튼이 안 보이면 브라우저 메뉴(⋮)에서 앱 설치나 홈 화면에 추가를 눌러 주세요.';
   pop.appendChild(n);$('#getBtn').parentNode.appendChild(pop);$('#getBtn').setAttribute('aria-expanded','true')};

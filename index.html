@@ -36,7 +36,10 @@ nav.menu a:hover{color:var(--ink);background:var(--surface)}
 .dlmenu{position:absolute;right:0;top:calc(100% + 8px);z-index:8;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.16);padding:6px;min-width:250px;display:flex;flex-direction:column;gap:2px;animation:up .2s var(--ease) both}
 .dlmenu button{display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:0;background:transparent;border-radius:8px;padding:9px 12px;text-align:left;cursor:pointer;font-size:14.5px;font-weight:700;color:var(--ink)}
 .dlmenu button small{font-size:12px;font-weight:500;color:var(--muted)}
-.dlmenu button:hover{background:var(--bg)}
+.dlmenu button:hover,.dlmenu a:hover{background:var(--bg)}
+.dlmenu a{display:flex;flex-direction:column;align-items:flex-start;gap:1px;border-radius:8px;padding:9px 12px;font-size:14.5px;font-weight:700;color:var(--ink);text-decoration:none}
+.dlmenu a small{font-size:12px;font-weight:500;color:var(--muted)}
+.dlsub{font-size:12px;font-weight:700;color:var(--muted);padding:10px 12px 2px;border-top:1px solid var(--line);margin-top:4px}
 .dlmenu .all{border-top:1px solid var(--line);margin-top:4px;padding-top:10px;border-radius:0 0 8px 8px}
 .editTog{flex-shrink:0;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 11px;font-size:13.5px;font-weight:700;cursor:pointer}
 .editTog.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -387,6 +390,8 @@ function closeDl(){$('#dlMenu').hidden=true;$('#hdrDl').setAttribute('aria-expan
 $('#hdrDl').onclick=e=>{e.stopPropagation();const m=$('#dlMenu');if(!m.hidden){closeDl();return}m.textContent='';
   (D.tools||[]).filter(t=>t.file).forEach(t=>{const b=el('button');b.setAttribute('role','menuitem');b.append(document.createTextNode('↓ '+t.name),el('small','',t.fileName||''));
     b.onclick=ev=>{closeDl();if(downloadsApi){saveFile(ev,t.file,t.fileName)}else{const a=document.createElement('a');a.href=t.file;a.download=t.fileName||'';document.body.appendChild(a);a.click();a.remove()}};m.appendChild(b)});
+  const wl=el('div','dlsub','일정표 PC 위젯 프로그램');m.appendChild(wl);
+  [['윈도우','DeadlinePlanner-Windows.zip'],['맥 (M1~M4 칩)','DeadlinePlanner-Mac-AppleSilicon.zip'],['맥 (인텔)','DeadlinePlanner-Mac-Intel.zip']].forEach(([n,f])=>{const a=el('a');a.href='https://github.com/lgy-10/webtoon-toolkit/releases/latest/download/'+f;a.target='_blank';a.rel='noopener';a.setAttribute('role','menuitem');a.append(document.createTextNode('↓ '+n),el('small','',f));a.onclick=()=>closeDl();m.appendChild(a)});
   const all=el('button','all');all.setAttribute('role','menuitem');all.append(document.createTextNode('↓ 전부 한 번에 받기'),el('small','','zip 파일 하나로'));all.onclick=()=>{closeDl();$('#allDl').click()};m.appendChild(all);
   m.hidden=false;$('#hdrDl').setAttribute('aria-expanded','true')};
 document.addEventListener('click',e=>{if(!$('#dlMenu').hidden&&!$('#dlMenu').contains(e.target))closeDl()});
