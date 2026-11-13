@@ -202,6 +202,16 @@ textarea.memo{width:100%;min-height:90px;border:1px solid var(--line);background
 .palopt[aria-pressed="true"]{background:var(--bg);font-weight:900}
 .palopt .sw{display:flex;gap:3px;margin-left:auto}
 .palopt .sw i{width:14px;height:14px;border-radius:4px;display:block}
+.getbtn{background:#2a2b30;color:#f4f4f6;border-color:#2a2b30;display:inline-flex;align-items:center;gap:2px}
+.getbtn .ar{display:inline-block;transition:transform .18s}.getbtn .sm{display:none}
+@media (hover:hover){.getbtn:hover{border-color:#2a2b30;transform:translateY(-1px)}.getbtn:hover .ar{transform:translateY(2px)}}
+.getpop{position:absolute;right:0;top:calc(100% + 6px);z-index:30;width:270px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.14);padding:6px;display:flex;flex-direction:column}
+.getopt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;border:0;background:transparent;border-radius:9px;padding:9px 10px;text-align:left;font-size:14px;font-weight:700;width:100%}
+.getopt small{font-size:12.5px;font-weight:500;color:var(--muted);line-height:1.5}
+.getopt:hover{background:var(--bg)}
+.getnote{font-size:12.5px;color:var(--muted);line-height:1.55;padding:8px 10px;border-top:1px solid var(--line);margin-top:4px}
+.getwrap{order:9}
+@media (max-width:560px){.getbtn .lg{display:none}.getbtn .sm{display:inline}.getwrap{order:0}header.top h1{flex:1 1 calc(100% - 110px)!important}.getpop{width:min(270px,calc(100vw - 32px))}}
 .hwrap{position:relative}
 .mini{max-width:440px;margin:0 auto}
 .mini .card{padding:14px 16px}
@@ -243,6 +253,7 @@ body.wmode .wexit{display:inline-flex;margin:0 auto 10px}
 <div class="wrap">
   <header class="top">
     <h1>마감 역산 일정표 <small id="saveSt" class="savest"></small></h1>
+    <span class="hwrap getwrap"><button class="btn getbtn" id="getBtn" aria-haspopup="true" aria-expanded="false"><span class="ar">↓</span> <span class="lg">프로그램 받기</span><span class="sm">받기</span></button></span>
     <button class="btn primary" id="newBtn">+ 새 일정</button>
     <button class="btn" id="bkBtn">백업 받기</button>
     <button class="btn" id="ldBtn">불러오기</button>
@@ -534,6 +545,25 @@ if((location.protocol==='https:'||location.hostname==='localhost')&&'serviceWork
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;if(!standalone&&!WMODE)$('#installBar').hidden=false});
 $('#installBtn').onclick=async()=>{if(!deferred)return;deferred.prompt();try{const r=await deferred.userChoice;if(r.outcome==='accepted'){$('#installBar').hidden=true;toast('설치했어요','good')}}catch(e){}deferred=null};
 addEventListener('appinstalled',()=>{$('#installBar').hidden=true});
+function closeGet(){const p=document.querySelector('.getpop');if(p){p.remove();$('#getBtn').setAttribute('aria-expanded','false')}}
+async function getFile(){closeGet();let src=null;
+  try{if(location.protocol!=='file:'){const r=await fetch(location.pathname,{cache:'no-cache'});if(r.ok){const t=await r.text();if(t.includes('마감 역산 일정표'))src=t}}}catch(e){}
+  if(!src&&location.protocol!=='file:'){try{const r=await fetch('../download/deadline-planner.html');if(r.ok)src=await r.text()}catch(e){}}
+  if(!src){toast(location.protocol==='file:'?'지금 열어 둔 이 파일이 바로 프로그램이에요':'파일을 못 가져왔어요. 잠시 뒤 다시 해 주세요','bad');return}
+  dl('deadline-planner.html',new Blob([src],{type:'text/html'}));toast('파일을 받았어요. 더블클릭하면 열려요','good')}
+async function getInstall(){closeGet();if(!deferred)return;deferred.prompt();try{const r=await deferred.userChoice;if(r.outcome==='accepted'){$('#installBar').hidden=true;toast('설치했어요','good')}}catch(e){}deferred=null}
+$('#getBtn').onclick=e=>{e.stopPropagation();if(document.querySelector('.getpop')){closeGet();return}
+  const pop=document.createElement('div');pop.className='getpop';pop.setAttribute('role','menu');
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const add=(t,d,f)=>{const b=document.createElement('button');b.type='button';b.className='getopt';b.setAttribute('role','menuitem');b.innerHTML='<span>'+t+'</span><small>'+d+'</small>';b.onclick=ev=>{ev.stopPropagation();f()};pop.appendChild(b)};
+  if(standalone){}else if(deferred)add('앱으로 설치','바탕화면이나 홈 화면에 아이콘이 생겨요. 인터넷 없어도 열려요.',getInstall);
+  add('파일로 받기 (.html)','PC에 저장해 두고 더블클릭해서 열어요. 일정은 그 파일을 연 브라우저에 저장돼요.',getFile);
+  const n=document.createElement('div');n.className='getnote';
+  n.textContent=standalone?'지금 앱으로 열려 있어요.':deferred?'설치한 앱과 받은 파일은 저장 공간이 따로라서, 옮길 땐 백업 받기 → 불러오기를 써 주세요.':ios?'아이폰은 Safari 아래 공유 버튼 → 홈 화면에 추가를 누르면 앱처럼 쓸 수 있어요.':'설치 버튼이 안 보이면 브라우저 메뉴(⋮)에서 앱 설치나 홈 화면에 추가를 눌러 주세요.';
+  pop.appendChild(n);$('#getBtn').parentNode.appendChild(pop);$('#getBtn').setAttribute('aria-expanded','true')};
+document.addEventListener('click',e=>{const p=document.querySelector('.getpop');if(p&&!p.contains(e.target))closeGet()});
+addEventListener('keydown',e=>{if(e.key==='Escape')closeGet()});
+
 addEventListener('keydown',e=>{const tg=e.target;if(/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName)||tg.isContentEditable||e.metaKey||e.ctrlKey||e.altKey)return;if(!$('#newov').hidden)return;
   const v=WMODE?'mini':S.view;
   if(e.key==='n'||e.key==='N'||e.key==='ㅜ'){e.preventDefault();openNew();return}
