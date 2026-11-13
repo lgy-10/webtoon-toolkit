@@ -234,6 +234,30 @@ textarea.memo{width:100%;min-height:90px;border:1px solid var(--line);background
 body.wmode header.top,body.wmode .viewseg,body.wmode #sample{display:none}
 body.wmode .wrap{padding-top:10px}
 .wexit{display:none}
+.dhero{padding:18px 20px 16px}
+.dh-top{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;min-width:0}
+.dh-top i{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 2px rgba(255,255,255,.15)}
+.dh-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh-type{font-size:11.5px;color:rgba(244,244,246,.55);font-weight:600}
+.dh-num{font-size:clamp(64px,24vw,112px);font-weight:900;line-height:1;letter-spacing:-.05em;margin:14px 0 6px;font-variant-numeric:tabular-nums}
+.dhero.hot .dh-num{color:#ff8a80}
+.dh-due{font-size:13.5px;color:rgba(244,244,246,.72);font-weight:600}
+.dh-prog{display:flex;align-items:center;gap:10px;margin:14px 0 12px;font-size:12px;color:rgba(244,244,246,.6);font-variant-numeric:tabular-nums;font-weight:700}
+.dh-bar{flex:1;height:5px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}.dh-bar i{display:block;height:100%;background:var(--hi,#f4f4f6);border-radius:99px}
+.dh-now{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;padding:11px 12px;border-radius:10px;background:rgba(255,255,255,.07)}
+.dh-lab{font-size:11.5px;color:rgba(244,244,246,.55);font-weight:700;flex-basis:100%}
+.dh-now b{font-size:17px;font-weight:800}
+.dh-sd{font-size:12.5px;color:rgba(244,244,246,.7);font-variant-numeric:tabular-nums}
+.dh-st{font-size:12.5px;font-weight:700;margin-top:10px;color:rgba(244,244,246,.7)}
+.dh-st.warn{color:#ffd27a}.dh-st.bad{color:#ff8a80}
+.drest{padding:6px 8px}
+.dr{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;border:0;border-top:1px solid var(--line);background:transparent;padding:10px 8px;text-align:left;border-radius:0}
+.dr:first-child{border-top:0}.dr:hover{background:var(--bg)}
+.dr i{width:9px;height:9px;border-radius:50%}
+.dr-tx{min-width:0}.dr-tx b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dr-tx small{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dr-d{font-size:24px;font-weight:900;letter-spacing:-.03em;font-variant-numeric:tabular-nums}.dr-d.hot{color:var(--bad)}
+body.wmode .wrap{padding-left:10px;padding-right:10px}
+
 .dbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:2px;height:38px;padding:0 6px 0 14px;background:var(--bg);-webkit-app-region:drag;user-select:none}
 .dbar-t{flex:1;font-size:12.5px;font-weight:700;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dbtn{-webkit-app-region:no-drag;width:30px;height:28px;border:0;border-radius:7px;background:transparent;color:var(--muted);display:grid;place-items:center}
@@ -532,18 +556,27 @@ function exportIcs(p){const P=plan(p);const esc=t=>String(t).replace(/[\\,;]/g,m
   lines.push('END:VCALENDAR');dl((p.name||'일정').replace(/[\\/:*?"<>|]/g,'')+'.ics',new Blob([lines.join('\r\n')],{type:'text/calendar'}));toast('캘린더 파일을 받았어요. 구글 캘린더 등에서 가져오기로 넣을 수 있어요.','good')}
 // ---------- 위젯 ----------
 const DESK=window.desktop||null;const WMODE=/[?&#]widget\b/.test(location.search+location.hash);if(WMODE)document.body.classList.add('wmode');
-function renderMini(){const box=$('#mini');box.textContent='';const t=today();const td=pd(t);
-  const c=el('section','card');const top=el('div','mini-top');top.append(el('b','',(td.getMonth()+1)+'월 '+td.getDate()+'일 '+W[td.getDay()]+'요일'));c.appendChild(top);
-  c.appendChild(el('div','sh')).appendChild(el('h2','','오늘 할 일'));
-  const ag=el('div','agenda');let n=0;
-  [...S.projects].sort((a,b)=>a.due<b.due?-1:1).forEach(p=>{const st=status(p);if(st.actual>=0.999||t<p.start)return;n++;const r=el('button','ag');r.type='button';
-    const dd=el('span','d'+(st.left<=7?' urgent':''),ddText(st.left));const ic=el('i');ic.style.background=colorOf(p);const tx=el('div');const b=el('b','',st.cur?st.cur.s.name:'마감 지남');tx.append(b,el('small','',p.name+(st.cur?' · '+md(st.cur.end)+'까지':'')+(st.kind==='bad'||st.kind==='warn'?' · '+st.text:'')));
-    r.append(dd,ic,tx);r.onclick=()=>{if(WMODE)return;openProject(p)};ag.appendChild(r)});
-  if(!n)ag.appendChild(el('p','dp-empty','진행 중인 일정이 없어요.'));c.appendChild(ag);box.appendChild(c);
-  const c2=el('section','card');c2.appendChild(el('div','sh')).appendChild(el('h2','','다가오는 마감 (2주)'));const ag2=el('div','agenda');const end=addD(t,14);
-  const evs=allEvents().filter(e=>e.date>=t&&e.date<=end&&!e.done).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
-  evs.forEach(e=>{const r=el('button','ag');r.type='button';const k=diff(t,e.date);const ic=el('i');ic.style.background=colorOf(e.p);const tx=el('div');tx.append(el('b','',e.label),el('small','',e.p.name));r.append(el('span','d'+(k<=2?' urgent':''),k===0?'오늘':md(e.date)),ic,tx);r.onclick=()=>{if(WMODE)return;openProject(e.p)};ag2.appendChild(r)});
-  if(!evs.length)ag2.appendChild(el('p','dp-empty','2주 안에 마감이 없어요.'));c2.appendChild(ag2);box.appendChild(c2);
+function renderMini(){const box=$('#mini');box.textContent='';const t=today();
+  const act=[...S.projects].filter(p=>status(p).actual<0.999).sort((a,b)=>a.due<b.due?-1:a.due>b.due?1:0);
+  if(!act.length){const c=el('section','card');c.appendChild(el('p','dp-empty','진행 중인 일정이 없어요.'));box.appendChild(c)}
+  else{const hero=act.find(p=>p.id===S.wHero)||act[0];const st=status(hero);const L=st.left;
+    const h=el('section','card sumcard dhero'+(L<=7?' hot':'')+(L<0?' over':''));
+    const top=el('div','dh-top');const dot=el('i');dot.style.background=colorOf(hero);top.append(dot,el('span','dh-name',hero.name||'이름 없는 일정'),el('span','dh-type',TYPES[hero.type]||''));h.appendChild(top);
+    h.appendChild(el('div','dh-num',ddText(L)));
+    h.appendChild(el('div','dh-due',L<0?md(hero.due)+' 마감이 지났어요':L===0?'오늘이 마감이에요':md(hero.due)+' 마감 · '+L+'일 남았어요'));
+    const pr=el('div','dh-prog');const bar=el('div','dh-bar');const fill=el('i');fill.style.width=Math.round(st.actual*100)+'%';bar.appendChild(fill);pr.append(bar,el('span','',Math.round(st.actual*100)+'%'));h.appendChild(pr);
+    const now=el('div','dh-now');
+    if(st.cur){const k=diff(t,st.cur.end);now.append(el('span','dh-lab','지금 할 단계'),el('b','',st.cur.s.name),el('span','dh-sd',md(st.cur.end)+'까지 · '+(k>0?k+'일 남음':k===0?'오늘까지':(-k)+'일 지남')))}
+    else now.append(el('span','dh-lab','남은 단계 없음'));
+    h.appendChild(now);
+    h.appendChild(el('div','dh-st '+st.kind,st.text));
+    if(!WMODE){h.style.cursor='pointer';h.onclick=()=>openProject(hero)}
+    box.appendChild(h);
+    const rest=act.filter(p=>p!==hero);
+    if(rest.length){const c=el('section','card drest');rest.forEach(p=>{const s2=status(p);const r=el('button','dr');r.type='button';const ic=el('i');ic.style.background=colorOf(p);
+        const tx=el('div','dr-tx');tx.append(el('b','',p.name||'이름 없는 일정'),el('small','',s2.cur?s2.cur.s.name+' · '+md(s2.cur.end)+'까지':md(p.due)+' 마감'));
+        r.append(ic,tx,el('span','dr-d'+(s2.left<=7?' hot':''),ddText(s2.left)));r.title=WMODE?'크게 보기':'열기';
+        r.onclick=()=>{if(WMODE){S.wHero=p.id;save();renderMini()}else openProject(p)};c.appendChild(r)});box.appendChild(c)}}
   if(WMODE){if(!DESK){const x=el('a','btn sm ghost wexit','전체 화면으로 열기');x.href=location.pathname;x.target='_blank';box.appendChild(x)}}
   else{const tip=el('p','dp-empty');tip.style.cssText='text-align:center;font-size:12.5px';tip.textContent=DESK?'위에 있는 위젯 띄우기를 누르면 바탕화면에 작은 창으로 띄울 수 있어요.':'앱으로 설치한 뒤 이 화면을 띄워 두면 작은 창으로 오늘 할 일을 볼 수 있어요.';box.appendChild(tip)}}
 // ---------- PC 위젯 프로그램 ----------

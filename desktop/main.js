@@ -25,7 +25,7 @@ function openMain(){
 function showWidget(){
   if(widget){widget.show();widget.focus();cfg.widget=true;saveCfg();buildMenu();return}
   const wa=screen.getPrimaryDisplay().workArea;
-  const b=onScreen(cfg.wb)||{width:340,height:500,x:wa.x+wa.width-360,y:wa.y+20};
+  const b=onScreen(cfg.wb)||{width:340,height:580,x:wa.x+wa.width-360,y:wa.y+20};
   widget=new BrowserWindow({...b,minWidth:280,minHeight:220,frame:false,resizable:true,skipTaskbar:true,alwaysOnTop:cfg.pinned,
     fullscreenable:false,maximizable:false,minimizable:false,show:false,title:'마감 위젯',icon:ICON,backgroundColor:'#f5f5f6',hasShadow:true,webPreferences:prefs});
   if(cfg.pinned)widget.setAlwaysOnTop(true,'floating');
