@@ -32,7 +32,7 @@ header.top h1{margin:0;font-size:20px;font-weight:900;letter-spacing:-.02em;marg
 .tabs{display:flex;gap:6px;overflow-x:auto;padding-block:4px 10px;scrollbar-width:thin}
 .ptab{flex-shrink:0;display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 8px 6px 14px;font-size:14px;font-weight:500;max-width:260px}
 .ptab .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ptab .dd{font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px;background:var(--bg);color:var(--muted);font-variant-numeric:tabular-nums}
+.ptab .dd{white-space:nowrap;flex-shrink:0;font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px;background:var(--bg);color:var(--muted);font-variant-numeric:tabular-nums}
 .ptab.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .ptab.on .dd{background:color-mix(in oklab,var(--bg) 18%,transparent);color:inherit}
 .dd.urgent{color:var(--bad)!important}
@@ -48,6 +48,11 @@ header.top h1{margin:0;font-size:20px;font-weight:900;letter-spacing:-.02em;marg
 .fld input{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 10px;font-size:15px;font-weight:500;color:var(--ink);min-width:0}
 .tog{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);font-weight:500;padding-bottom:9px;cursor:pointer;user-select:none}
 .tog input{width:18px;height:18px;accent-color:var(--ink)}
+.client{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;border-top:1px dashed var(--line);padding-top:12px}
+.client .full{grid-column:1/-1}
+.client textarea{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 10px;font-size:14.5px;font-weight:500;color:var(--ink);min-height:64px;resize:vertical;line-height:1.6}
+@media (max-width:560px){.client{grid-template-columns:minmax(0,1fr)}}
+.wait{display:inline-block;margin-left:6px;font-size:12px;font-weight:700;color:var(--accent);border:1px solid currentColor;border-radius:999px;padding:0 7px}
 .sum{display:grid;grid-template-columns:auto minmax(0,1fr);gap:20px;align-items:center}
 .dday{font-size:44px;font-weight:900;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
 .dday small{display:block;font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0;margin-top:6px}
@@ -123,6 +128,7 @@ textarea.memo{width:100%;min-height:90px;border:1px solid var(--line);background
 .newbox{background:var(--bg);border:1px solid var(--line);border-radius:16px;width:100%;max-width:520px;padding:18px;display:flex;flex-direction:column;gap:14px;animation:up .28s var(--ease)}
 .newbox h2{margin:0;font-size:17px}
 .presets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.presets .preset:last-child:nth-child(odd){grid-column:1/-1}
 .preset{border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:12px;text-align:left;display:flex;flex-direction:column;gap:3px}
 .preset b{font-size:15px}
 .preset span{font-size:12.5px;color:var(--muted);line-height:1.5}
@@ -153,6 +159,7 @@ textarea.memo{width:100%;min-height:90px;border:1px solid var(--line);background
     <h2 id="nTitle">새 일정 만들기</h2>
     <div class="presets" id="presets"></div>
     <label class="fld">이름<input id="nName" placeholder="예: 졸업작품 웹툰 1화"></label>
+    <label class="fld" id="nClientW" hidden>의뢰인<input id="nClient" placeholder="닉네임이나 이름"></label>
     <div class="dates">
       <label class="fld">시작일<input type="date" id="nStart"></label>
       <label class="fld">마감일<input type="date" id="nDue"></label>
@@ -169,9 +176,10 @@ const PRESETS={
   grad:{label:'졸업작품',desc:'몇 달짜리 웹툰·애니 졸작',stages:[['기획·시나리오',15],['콘티',20],['선화',25],['채색',22],['식자·후보정',10],['여유 기간',8]]},
   work:{label:'과제작',desc:'단편 만화·애니 같은 작품 과제',stages:[['기획',15],['콘티',25],['작화',40],['마무리',12],['여유 기간',8]]},
   task:{label:'과제물',desc:'리포트·기획안·발표 자료',stages:[['자료 조사',30],['초안 작성',35],['수정',20],['제출 준비',8],['여유 기간',7]]},
+  comm:{label:'커미션',desc:'의뢰받은 그림·만화 작업',stages:[['문의·자료 확인',8],['러프',15],['러프 컨펌',8],['선화',22],['채색',25],['수정',12],['납품',5],['여유 기간',5]]},
   custom:{label:'직접 만들기',desc:'단계를 내 마음대로',stages:[['1단계',34],['2단계',33],['3단계',33]]}
 };
-const TYPES={grad:'졸업작품',work:'과제작',task:'과제물',custom:'기타'};
+const TYPES={grad:'졸업작품',work:'과제작',task:'과제물',comm:'커미션',custom:'기타'};
 const $=s=>document.querySelector(s);
 const uid=()=>Math.random().toString(36).slice(2,9);
 const el=(t,c,txt)=>{const e=document.createElement(t);if(c)e.className=c;if(txt!=null)e.textContent=txt;return e};
@@ -192,7 +200,7 @@ function load(){try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r
 function save(){if(!canSave)return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){canSave=false}}
 function sampleData(){const t=today();
   const mk=(type,name,start,due,prog)=>({id:uid(),name,type,start,due,skipWeekend:false,memo:'',sample:true,stages:PRESETS[type].stages.map(([n,w],i)=>({id:uid(),name:n,w,pct:prog[i]||0,done:(prog[i]||0)>=100}))});
-  return {v:1,cur:null,projects:[mk('grad','예시: 졸업작품 웹툰',addD(t,-40),addD(t,95),[100,60,0,0,0,0]),mk('task','예시: 콘텐츠기획 기말 리포트',addD(t,-3),addD(t,11),[70,0,0,0,0])]}}
+  return {v:1,cur:null,projects:[mk('grad','예시: 졸업작품 웹툰',addD(t,-40),addD(t,95),[100,60,0,0,0,0]),mk('task','예시: 콘텐츠기획 기말 리포트',addD(t,-3),addD(t,11),[70,0,0,0,0]),Object.assign(mk('comm','예시: 캐릭터 일러스트 커미션',addD(t,-6),addD(t,14),[100,100,40,0,0,0,0,0]),{client:'예시 의뢰인',contact:'DM으로 연락',brief:'전신 1인, 배경 없음, 러프 단계에서 한 번 확인받기로 함'})]}}
 S=load()||sampleData();if(!S.cur||!S.projects.some(p=>p.id===S.cur))S.cur=S.projects[0]?S.projects[0].id:null;
 
 // ---------- 계산 ----------
@@ -224,7 +232,7 @@ function cur(){return S.projects.find(p=>p.id===S.cur)||null}
 function render(){save();renderTabs();renderMain();$('#sample').hidden=!S.projects.some(p=>p.sample)}
 function renderTabs(){const box=$('#tabs');box.textContent='';
   [...S.projects].sort((a,b)=>a.due<b.due?-1:1).forEach(p=>{const b=el('button','ptab'+(p.id===S.cur?' on':''));b.setAttribute('role','tab');b.setAttribute('aria-selected',p.id===S.cur);
-    const n=diff(today(),p.due);const done=p.stages.every(s=>s.done);b.append(el('span','nm',p.name||'이름 없는 일정'),el('span','dd'+(!done&&n>=0&&n<=7?' urgent':''),done?'완료':ddText(n)));
+    const n=diff(today(),p.due);const done=p.stages.every(s=>s.done);b.append(el('span','nm',(p.name||'이름 없는 일정')+(p.client&&!String(p.name).includes(p.client)?' · '+p.client:'')),el('span','dd'+(!done&&n>=0&&n<=7?' urgent':''),done?'완료':ddText(n)));
     b.onclick=()=>{S.cur=p.id;render()};box.appendChild(b)})}
 function renderMain(){const m=$('#main');m.textContent='';const p=cur();
   if(!p){const e=el('div','empty');e.append(el('b','','아직 일정이 없어요'),document.createTextNode('위의 ‘+ 새 일정’을 눌러 졸업작품이나 과제 마감을 넣어 보세요.'));m.appendChild(e);return}
@@ -239,12 +247,15 @@ function renderMain(){const m=$('#main');m.textContent='';const p=cur();
   si.onchange=()=>{if(!si.value)return;if(si.value>p.due){toast('시작일은 마감일보다 앞이어야 해요.','bad');si.value=p.start;return}p.start=si.value;render()};
   di.onchange=()=>{if(!di.value)return;if(di.value<p.start){toast('마감일은 시작일보다 뒤여야 해요.','bad');di.value=p.due;return}p.due=di.value;render()};
   const tg=el('label','tog');const cb=el('input');cb.type='checkbox';cb.checked=!!p.skipWeekend;cb.onchange=()=>{p.skipWeekend=cb.checked;render()};tg.append(cb,document.createTextNode('주말은 쉬어요'));
-  ds.append(fs,fd,tg);h.append(nm,ty,ds);m.appendChild(h);
+  ds.append(fs,fd,tg);h.append(nm,ty,ds);
+  if(p.type==='comm'||p.client||p.contact||p.brief){const cg=el('div','client');const mkf=(label,key,ph,area)=>{const f=el('label','fld'+(area?' full':''),label);const i=el(area?'textarea':'input');i.value=p[key]||'';i.placeholder=ph;i.onchange=()=>{const v=i.value.trim();if(v)p[key]=v;else delete p[key];render()};f.appendChild(i);return f};
+    cg.append(mkf('의뢰인','client','닉네임이나 이름'),mkf('연락 메모','contact','예: 트위터 DM, 오픈채팅'),mkf('의뢰 내용','brief','인원, 구도, 배경, 확인받을 시점 같은 요청 사항',true));h.appendChild(cg)}
+  m.appendChild(h);
   // 요약
   const s=el('section','card');const sm=el('div','sum');
   const dd=el('div','dday',ddText(st.left));dd.appendChild(el('small','',md(p.due)+' 마감 · 작업일 '+P.N+'일'));
   const sv=el('div','stat');const pill=el('span','pill '+st.kind,st.text);
-  const now=el('div','now');if(st.cur){now.append('지금 할 단계: ');now.appendChild(el('b','',st.cur.s.name));now.append(' · '+md(st.cur.end)+'까지 ('+ddText(diff(today(),st.cur.end))+')')}else now.textContent=st.actual>=0.999?'수고했어요!':'';
+  const now=el('div','now');if(st.cur){now.append('지금 할 단계: ');now.appendChild(el('b','',st.cur.s.name));now.append(' · '+md(st.cur.end)+'까지 ('+ddText(diff(today(),st.cur.end))+')');if(/컨펌|확인받/.test(st.cur.s.name))now.appendChild(el('span','wait','상대 확인 기다리는 단계'))}else now.textContent=st.actual>=0.999?'수고했어요!':'';
   const pr=el('div','prog');const pi=el('i');pi.style.width=Math.round(st.actual*100)+'%';pr.appendChild(pi);
   if(today()>=p.start&&today()<=p.due){const ex=el('em');ex.style.left='calc('+(st.expected*100).toFixed(1)+'% - 1px)';pr.appendChild(ex)}
   const lg=el('div','legend');lg.append(el('span','','진행 '+Math.round(st.actual*100)+'%'),el('span','exp','오늘까지 계획 '+Math.round(st.expected*100)+'%'));
@@ -279,7 +290,7 @@ function renderMain(){const m=$('#main');m.textContent='';const p=cur();
   m.appendChild(c);
   // 메모
   const mc=el('section','card');const msh=el('div','sh');msh.appendChild(el('h2','','메모'));mc.appendChild(msh);
-  const ta=el('textarea','memo');ta.value=p.memo||'';ta.placeholder='제출 형식, 교수님 피드백, 준비물 같은 걸 적어 두세요.';ta.setAttribute('aria-label','메모');ta.onchange=()=>{p.memo=ta.value;save()};mc.appendChild(ta);m.appendChild(mc);
+  const ta=el('textarea','memo');ta.value=p.memo||'';ta.placeholder=p.type==='comm'?'파일 형식, 해상도, 전달 방법, 수정 요청 내용 같은 걸 적어 두세요.':'제출 형식, 교수님 피드백, 준비물 같은 걸 적어 두세요.';ta.setAttribute('aria-label','메모');ta.onchange=()=>{p.memo=ta.value;save()};mc.appendChild(ta);m.appendChild(mc);
   // 아래
   const ft=el('div','foot');const ics=el('button','btn','캘린더 파일(.ics) 받기');ics.onclick=()=>exportIcs(p);
   const cp=el('button','btn ghost','복사해서 새로 만들기');cp.onclick=()=>{const q=JSON.parse(JSON.stringify(p));q.id=uid();q.name=p.name+' (복사)';delete q.sample;q.stages.forEach(s=>{s.id=uid();s.pct=0;s.done=false});S.projects.push(q);S.cur=q.id;render();toast('복사했어요','good')};
@@ -291,14 +302,14 @@ function arm(btn,label,fn){const l=btn.textContent;btn.onclick=()=>{if(btn.class
 
 // ---------- 새 일정 ----------
 let nType='grad';
-function drawPresets(){const b=$('#presets');b.textContent='';Object.entries(PRESETS).forEach(([k,v])=>{const x=el('button','preset');x.type='button';x.setAttribute('aria-pressed',k===nType);x.append(el('b','',v.label),el('span','',v.desc));x.onclick=()=>{nType=k;drawPresets()};b.appendChild(x)})}
-function openNew(){nType='grad';drawPresets();$('#nName').value='';$('#nStart').value=today();$('#nDue').value=addD(today(),30);$('#newov').hidden=false;setTimeout(()=>$('#nName').focus(),50)}
+function drawPresets(){const b=$('#presets');b.textContent='';Object.entries(PRESETS).forEach(([k,v])=>{const x=el('button','preset');x.type='button';x.setAttribute('aria-pressed',k===nType);x.append(el('b','',v.label),el('span','',v.desc));x.onclick=()=>{nType=k;drawPresets()};b.appendChild(x)});$('#nClientW').hidden=nType!=='comm';$('#nName').placeholder=nType==='comm'?'예: 캐릭터 일러스트 커미션':nType==='task'?'예: 콘텐츠기획 기말 리포트':'예: 졸업작품 웹툰 1화'}
+function openNew(){nType='grad';$('#nClient').value='';drawPresets();$('#nName').value='';$('#nStart').value=today();$('#nDue').value=addD(today(),30);$('#newov').hidden=false;setTimeout(()=>$('#nName').focus(),50)}
 function closeNew(){$('#newov').hidden=true}
 $('#newBtn').onclick=openNew;$('#nCancel').onclick=closeNew;
 $('#newov').addEventListener('mousedown',e=>{if(e.target===$('#newov'))closeNew()});
 addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#newov').hidden)closeNew()});
 $('#nOk').onclick=()=>{const st=$('#nStart').value,du=$('#nDue').value;if(!st||!du){toast('시작일과 마감일을 골라 주세요.','bad');return}if(du<st){toast('마감일은 시작일보다 뒤여야 해요.','bad');return}
-  const pr=PRESETS[nType];const p={id:uid(),name:$('#nName').value.trim()||pr.label,type:nType,start:st,due:du,skipWeekend:false,memo:'',stages:pr.stages.map(([n,w])=>({id:uid(),name:n,w,pct:0,done:false}))};
+  const pr=PRESETS[nType];const p={id:uid(),name:$('#nName').value.trim()||pr.label,type:nType,start:st,due:du,skipWeekend:false,memo:'',stages:pr.stages.map(([n,w])=>({id:uid(),name:n,w,pct:0,done:false}))};const cl=$('#nClient').value.trim();if(nType==='comm'&&cl)p.client=cl;
   S.projects.push(p);S.cur=p.id;closeNew();render();toast('일정을 만들었어요. 단계별 마감이 자동으로 잡혔어요.','good')};
 $('#sampleDel').onclick=()=>{S.projects=S.projects.filter(p=>!p.sample);S.cur=S.projects[0]?S.projects[0].id:null;render();toast('예시를 지웠어요')};
 
