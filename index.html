@@ -27,6 +27,17 @@ nav.menu{margin-left:auto;display:flex;gap:4px;flex-shrink:0}
 nav.menu a{text-decoration:none;font-size:14px;color:var(--muted);padding:6px 10px;border-radius:8px}
 nav.menu a:hover{color:var(--ink);background:var(--surface)}
 @media (max-width:560px){nav.menu a.hide-s{display:none}}
+.dlw{position:relative;flex-shrink:0}
+.hdl{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:9px;padding:7px 13px;font-size:14px;font-weight:700;cursor:pointer;transition:transform .15s var(--ease),box-shadow .15s var(--ease)}
+.hdl .ic{display:inline-block;transition:transform .2s var(--ease)}
+.hdl .l2{display:none}
+@media (hover:hover){.hdl:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.18)}.hdl:hover .ic{transform:translateY(2px)}}
+@media (max-width:560px){.hdl .l1{display:none}.hdl .l2{display:inline}.hdl{padding:6px 11px;font-size:13.5px}}
+.dlmenu{position:absolute;right:0;top:calc(100% + 8px);z-index:8;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.16);padding:6px;min-width:250px;display:flex;flex-direction:column;gap:2px;animation:up .2s var(--ease) both}
+.dlmenu button{display:flex;flex-direction:column;align-items:flex-start;gap:1px;border:0;background:transparent;border-radius:8px;padding:9px 12px;text-align:left;cursor:pointer;font-size:14.5px;font-weight:700;color:var(--ink)}
+.dlmenu button small{font-size:12px;font-weight:500;color:var(--muted)}
+.dlmenu button:hover{background:var(--bg)}
+.dlmenu .all{border-top:1px solid var(--line);margin-top:4px;padding-top:10px;border-radius:0 0 8px 8px}
 .editTog{flex-shrink:0;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 11px;font-size:13.5px;font-weight:700;cursor:pointer}
 .editTog.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .ebar{background:var(--soft);border-bottom:1px solid var(--line);font-size:13.5px}
@@ -183,6 +194,8 @@ footer p{margin:2px 0}
 <header class="top"><div class="wrap">
   <a class="logo" href="#" id="logo"><span>✎</span><em style="font-style:normal" id="logoTxt"></em></a>
   <nav class="menu" aria-label="메뉴"><a href="#tools" class="hide-s">도구</a><a href="#guides">사용법</a><a href="#faq" class="hide-s">자주 묻는 질문</a></nav>
+  <div class="dlw"><button class="hdl" id="hdrDl" aria-haspopup="true" aria-expanded="false"><span class="ic">↓</span><span class="l1">프로그램 받기</span><span class="l2">받기</span></button>
+    <div class="dlmenu" id="dlMenu" hidden role="menu"></div></div>
   <button class="editTog" id="editTog" hidden>편집</button>
 </div></header>
 <div class="ebar" id="ebar" hidden><div class="wrap">
@@ -368,6 +381,16 @@ $('#allDl').onclick=async()=>{
   }catch(e){if(!(e&&e.code==='declined'))toast('파일을 받지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요.','bad')}
   finally{allBusy=false;btn.disabled=false;btn.innerHTML=lbl}
 };
+
+// ---------- 상단 받기 메뉴 ----------
+function closeDl(){$('#dlMenu').hidden=true;$('#hdrDl').setAttribute('aria-expanded','false')}
+$('#hdrDl').onclick=e=>{e.stopPropagation();const m=$('#dlMenu');if(!m.hidden){closeDl();return}m.textContent='';
+  (D.tools||[]).filter(t=>t.file).forEach(t=>{const b=el('button');b.setAttribute('role','menuitem');b.append(document.createTextNode('↓ '+t.name),el('small','',t.fileName||''));
+    b.onclick=ev=>{closeDl();if(downloadsApi){saveFile(ev,t.file,t.fileName)}else{const a=document.createElement('a');a.href=t.file;a.download=t.fileName||'';document.body.appendChild(a);a.click();a.remove()}};m.appendChild(b)});
+  const all=el('button','all');all.setAttribute('role','menuitem');all.append(document.createTextNode('↓ 전부 한 번에 받기'),el('small','','zip 파일 하나로'));all.onclick=()=>{closeDl();$('#allDl').click()};m.appendChild(all);
+  m.hidden=false;$('#hdrDl').setAttribute('aria-expanded','true')};
+document.addEventListener('click',e=>{if(!$('#dlMenu').hidden&&!$('#dlMenu').contains(e.target))closeDl()});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#dlMenu').hidden)closeDl()});
 
 // ---------- 저장 ----------
 async function persist(){
