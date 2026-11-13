@@ -10,12 +10,12 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2.0.5/fonts/variable/woff2/SUIT-Variable.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap">
 <style>
 /* 레이아웃: 위 일정 탭 → 요약(D-day·상태·진행률) → 타임라인 → 단계 표 → 메모 */
 :root{
   --bg:#f5f5f6;--surface:#fff;--ink:#151517;--muted:#6e6e76;--line:#e4e4e8;--dark:#2a2b30;--seg1:#3a3b41;--seg2:#5b5c63;--good:#1f8a55;--warn:#c27a10;--bad:#c8333a;--soft:#eef3fc;--accent:#2f6fd6;--c1:#3d4f6b;--c2:#9a5a52;--c3:#4f7563;--c4:#8a7350;--c5:#6e5f86;--c6:#4f7480;--evtx:#fff;
-  --f:"SUIT Variable","SUIT","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;--fn:"Space Grotesk","SUIT Variable","SUIT","Apple SD Gothic Neo",sans-serif;--phead:#2a2b30;--phead-ink:#f4f4f6;--ease:cubic-bezier(.2,.8,.2,1);
+  --f:"SUIT Variable","SUIT","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;--fn:"Inter","SUIT Variable","SUIT","Apple SD Gothic Neo",sans-serif;--phead:#2a2b30;--phead-ink:#f4f4f6;--ease:cubic-bezier(.2,.8,.2,1);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111113;--surface:#1b1b1e;--ink:#ececf0;--muted:#9a9aa3;--line:#2c2c31;--dark:#2e2f35;--seg1:#4a4b52;--seg2:#63646c;--good:#3fbf7f;--warn:#e0a03a;--bad:#ef6a70;--soft:#1a2436;--accent:#6b9cf0;--c1:#8ea3c4;--c2:#c99189;--c3:#8fb39f;--c4:#c4ad84;--c5:#a99ac0;--c6:#8db0ba;--phead:#26262b;--phead-ink:#ececf0;--evtx:#111113;color-scheme:dark}}
 *{box-sizing:border-box}
@@ -47,7 +47,7 @@ header.top h1{margin:0;font-size:20px;font-weight:900;letter-spacing:-.02em;marg
 .sumcard .legend{color:rgba(244,244,246,.6)}.sumcard .legend span::before{background:var(--phead-ink)}
 .sumcard .prog{background:rgba(255,255,255,.1);border-color:transparent}.sumcard .prog i{background:var(--hi,var(--phead-ink))}
 .sumcard .tlax{color:rgba(244,244,246,.55)}
-.ptab .dd,.st .when,.pc output,.legend,.tlax,.day .dn,.todo-i .dd2,.dp-i em,.ag .d,.mini-top b,.calhead h2,.fld input[type=date],.st input[type=number]{font-family:var(--fn)}
+.ptab .dd,.st .when,.pc output,.legend,.tlax,.day .dn,.todo-i .dd2,.dp-i em,.ag .d,.mini-top b,.calhead h2,.fld input[type=date],.st input[type=number]{font-family:var(--fn);font-feature-settings:'tnum' 1,'ss01' 1}
 .head{display:flex;flex-direction:column;gap:12px}
 .name{font-size:22px;font-weight:900;letter-spacing:-.02em;border:1px solid transparent;border-radius:8px;padding:4px 6px;margin:-4px -6px;background:transparent;width:100%;min-width:0}
 .name:hover{border-color:var(--line)}.name:focus{outline:none;border-color:var(--ink);background:var(--bg)}
@@ -65,7 +65,7 @@ header.top h1{margin:0;font-size:20px;font-weight:900;letter-spacing:-.02em;marg
 @media (max-width:560px){.client{grid-template-columns:minmax(0,1fr)}}
 .wait{display:inline-block;margin-left:6px;font-size:12px;font-weight:700;color:var(--accent);border:1px solid currentColor;border-radius:999px;padding:0 7px}
 .sum{display:grid;grid-template-columns:auto minmax(0,1fr);gap:20px;align-items:center}
-.dday{font-family:var(--fn);font-size:50px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.dday{font-family:var(--fn);font-size:48px;font-weight:800;letter-spacing:-.035em;line-height:1;font-variant-numeric:tabular-nums}
 .dday small{display:block;font-family:var(--f);font-size:13px;font-weight:500;color:rgba(244,244,246,.62);letter-spacing:0;margin-top:6px}
 .stat{display:flex;flex-direction:column;gap:8px;min-width:0}
 .pill{align-self:flex-start;border-radius:999px;padding:4px 12px;font-size:13.5px;font-weight:700;color:#fff;background:var(--good)}
