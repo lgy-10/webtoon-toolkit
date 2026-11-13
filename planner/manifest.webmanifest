@@ -1,0 +1,42 @@
+{
+ "name": "마감 역산 일정표",
+ "short_name": "마감 일정표",
+ "description": "졸업작품·과제·커미션 마감을 거꾸로 계산해 주는 일정표",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#f5f5f6",
+ "theme_color": "#2a2b30",
+ "lang": "ko",
+ "icons": [
+  {
+   "src": "icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ],
+ "shortcuts": [
+  {
+   "name": "위젯 모드",
+   "short_name": "위젯",
+   "url": "./?widget",
+   "icons": [
+    {
+     "src": "icon-192.png",
+     "sizes": "192x192"
+    }
+   ]
+  }
+ ]
+}
